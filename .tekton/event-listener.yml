@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: kaniko
+spec:
+  triggers:
+    - binding:
+        name: kaniko-binding
+      template:
+        name: kaniko-template
+
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: workspace
+spec:
+  triggers:
+    - binding:
+        name: simple-binding
+      template:
+        name: trigger-workspace
+
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: copy
+spec:
+  triggers:
+    - binding:
+        name: binding-copy
+      template:
+        name: trigger-copy

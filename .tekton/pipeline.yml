@@ -1,0 +1,100 @@
+# apiVersion: tekton.dev/v1beta1
+# kind: Pipeline
+# metadata:
+#   name: pipeline-workspace
+# spec:
+#   workspaces:
+#   - name: pipeline-workspace
+#   params:
+#   - name: repository
+#     default: https://github.com/donkeykong91/docker-tekton.git
+#   - name: branch
+#     default: master
+#   tasks:
+#   - name: clone
+#     workspaces:
+#     - name: artifacts
+#       workspace: pipeline-workspace          
+#     taskRef:
+#       name: clone-repo
+#     params:
+#     - name: repository
+#       value: $(params.repository)
+#     - name: branch
+#       value: $(params.branch)
+#   - name: task1
+#     workspaces:
+#     - name: task-workspace
+#       workspace: pipeline-workspace          
+#     taskRef:
+#       name: task-workspace
+#     runAfter:
+#     - clone
+
+# ---
+
+#SKOPEO START--------------------------------------------------------------------------
+
+# apiVersion: tekton.dev/v1beta1
+# kind: Pipeline
+# metadata:
+#   name: pipeline-copy-workspace
+# spec:
+#   workspaces:
+#   - name: pipeline-copy-workspace
+#   params:
+#    - name: username
+#      description: Username for Docker
+#    - name: password
+#      description: Password for Docker
+#   tasks: 
+#   - name: copy
+#     params: 
+#       - name: username
+#         value: $(params.username)
+#       - name: password
+#         value: $(params.password)
+#     workspaces: 
+#     - name: images-url
+#       workspace: pipeline-copy-workspace
+#     taskRef:
+#       name: skopeo-copy-task
+
+#SKOPEO END----------------------------------------------------------------------------
+
+#KANIKO START--------------------------------------------------------------------------
+
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: kaniko-pipeline
+spec:
+  workspaces:
+  - name: pipeline-workspace
+  params:
+  - name: repository
+    default: https://github.com/donkeykong91/kaniko-test.git
+  - name: branch
+    default: master
+  tasks: 
+  - name: kaniko-task
+    workspaces: 
+    - name: source
+      workspace: pipeline-workspace
+    taskRef:
+      name: kaniko
+    runAfter:
+    - git-clone
+  - name: git-clone
+    workspaces:
+    - name: artifacts
+      workspace: pipeline-workspace          
+    taskRef:
+      name: clone-repo
+    params:
+    - name: repository
+      value: $(params.repository)
+    - name: branch
+      value: $(params.branch)
+
+#KANIKO END----------------------------------------------------------------------------

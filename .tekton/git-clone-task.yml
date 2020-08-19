@@ -1,0 +1,28 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: clone-repo
+spec:
+  workspaces:
+  - name: artifacts 
+  params:
+  - name: repository
+    description: the git repo url
+  - name: branch
+    description: the git branch
+    default: master
+  steps:
+    - name: clone
+      image: ibmcom/pipeline-base-image
+      command: ["/bin/bash", "-c"]
+      args:
+        - |
+          set -x
+          echo 00 version
+          WS=$(workspaces.artifacts.path)
+          REPOSITORY=$(inputs.params.repository)
+          BRANCH=$(inputs.params.branch)
+          cd $WS
+          git --version
+          git clone --single-branch --branch $BRANCH $REPOSITORY
+          ls $WS

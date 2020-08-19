@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: task-workspace
+spec:
+  workspaces:
+  - name: task-workspace 
+  steps:
+    - name: echoenvvar
+      image: ubuntu
+      command: ["/bin/bash", "-c"]
+      args:
+        - |
+          set -x
+          WS=$(workspaces.task-workspace.path)
+          LAB=lab4-shared-git
+          ls $WS
+          cd $WS
+          ls docker-tekton
+          echo testing
+          # [ "$(./tekton/$LAB/script.bash)" = "worked" ] || exit 1

@@ -1,0 +1,201 @@
+# apiVersion: tekton.dev/v1beta1
+# kind: TriggerBinding
+# metadata:
+#   name: simple-binding
+
+# ---
+
+# apiVersion: tekton.dev/v1beta1
+# kind: TriggerTemplate
+# metadata:
+#   name: trigger-workspace
+# spec:
+#   resourcetemplates:
+#     - apiVersion: v1
+#       kind: PersistentVolumeClaim
+#       metadata:
+#         name: pipelinerun-$(uid)-pvc
+#       spec:
+#         resources:
+#           requests:
+#             storage:  1Gi
+#         volumeMode: Filesystem
+#         accessModes:
+#           - ReadWriteOnce
+#     - apiVersion: tekton.dev/v1beta1
+#       kind: PipelineRun
+#       metadata:
+#         name: pipelinerun-$(uid)
+#       spec:
+#         pipelineRef:
+#             name: pipeline-workspace
+#         workspaces:
+#           - name: pipeline-workspace
+#             persistentVolumeClaim:
+#               claimName: pipelinerun-$(uid)-pvc
+
+# ---
+
+#SKOPEO START----------------------------------------------------------------------------
+
+# apiVersion: tekton.dev/v1beta1
+# kind: TriggerBinding
+# metadata:
+#   name: binding-copy
+
+# ---
+
+# apiVersion: tekton.dev/v1beta1
+# kind: TriggerTemplate
+# metadata:
+#   name: trigger-copy
+# params:
+#   - name: username
+#     description: GitHub username
+#   - name: password
+#     description: GitHub password
+# spec:
+#   resourcetemplates:
+#     - apiVersion: v1
+#       kind: Secret
+#       metadata:
+#         name: docker-creds
+#         annotations:
+#           tekton.dev/docker-0: https://hub.docker.com
+#       type: kubernetes.io/basic-auth
+#       stringData:
+#         username: 1oraldsense9
+#         password: sacjim-nufdI4-dyxfyq
+#     - apiVersion: v1
+#       kind: ServiceAccount
+#       metadata:
+#         name: secret-service-account
+#       secrets:
+#         - name: docker-creds
+#     - apiVersion: v1
+#       kind: PersistentVolumeClaim
+#       metadata:
+#         name: pipelinerun-$(uid)-pvc
+#       spec:
+#         resources:
+#           requests:
+#             storage:  1Gi
+#         volumeMode: Filesystem
+#         accessModes:
+#           - ReadWriteOnce
+#     - apiVersion: tekton.dev/v1beta1
+#       kind: PipelineRun
+#       metadata:
+#         name: pipelinerun-$(uid)
+#       spec:
+#         pipelineRef:
+#             name: pipeline-copy-workspace
+#         params:
+#           - name: username
+#             value: $(params.username)
+#           - name: password
+#             value: $(params.password)
+#         workspaces:
+#           - name: pipeline-copy-workspace
+#             persistentVolumeClaim:
+#               claimName: pipelinerun-$(uid)-pvc
+
+#OPTIONAL------------------------------------------------
+    # - apiVersion: tekton.dev/v1beta1
+    #   kind: TaskRun
+    #   metadata:
+    #     name: skopeo-run
+    #   spec:
+    #     serviceAccountName: secret-service-account
+    #     params:
+    #     - name: srcImageURL
+    #       value: docker://hello-world:latest
+    #     - name: destImageURL
+    #       value: docker://1oraldsense9/helloworld
+    #     taskRef:
+    #       name: skopeo-copy-task
+    #     workspaces:
+    #     - name: images-url
+    #       configmap: 
+    #         name: image-configmap
+
+#SKOPEO END--------------------------------------------------------------------------------
+
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: kaniko-binding
+
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: kaniko-template
+# params:
+#   - name: username
+#     description: GitHub username
+#   - name: password
+#     description: GitHub password
+spec:
+  resourcetemplates:
+    - apiVersion: v1
+      # kind: Secret
+      # metadata:
+      #   name: docker-creds
+      #   annotations:
+      #     tekton.dev/docker-0: https://hub.docker.com
+      # type: kubernetes.io/basic-auth
+      # stringData:
+      #   username: 1oraldsense9
+      #   password: sacjim-nufdI4-dyxfyq
+      kind: Secret
+      metadata:
+        name: docker-creds
+        annotations:
+          tekton.dev/docker-0: https://hub.docker.com
+      data:
+        .dockercfg: eyAJImF1dGhzIjogeyAJCSJodHRwczovL2luZGV4LmRvY2tlci5pby92Mi8iOiB7IAkJCSJhdXRoIjogIk1RQnZBSElBWVFCc0FHUUFjd0JsQUc0QWN3QmxBRGtBT2dCekFHRUFZd0JxQUdrQWJRQXRBRzRBZFFCbUFHUUFTUUEwQUMwQVpBQjVBSGdBWmdCNUFIRUEiIAkJfSAJfSB9
+      type: kubernetes.io/dockercfg
+      # kind: Secret
+      # metadata:
+      #   name: docker-creds
+      # data:
+      #   .dockerconfigjson: eyAJImF1dGhzIjogeyAJCSJodHRwczovL2luZGV4LmRvY2tlci5pby92Mi8iOiB7IAkJCSJhdXRoIjogIk1RQnZBSElBWVFCc0FHUUFjd0JsQUc0QWN3QmxBRGtBT2dCekFHRUFZd0JxQUdrQWJRQXRBRzRBZFFCbUFHUUFTUUEwQUMwQVpBQjVBSGdBWmdCNUFIRUEiIAkJfSAJfSB9
+      # type: kubernetes.io/dockerconfigjson
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: secret-service-account
+      secrets:
+        - name: docker-creds
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: pipelinerun-$(uid)-pvc
+      spec:
+        resources:
+          requests:
+            storage:  1Gi
+        volumeMode: Filesystem
+        accessModes:
+          - ReadWriteOnce
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        name: pipelinerun-$(uid)
+      spec:
+        serviceAccountName: secret-service-account
+        pipelineRef:
+            name: kaniko-pipeline
+        # params:
+        #   - name: username
+        #     value: $(params.username)
+        #   - name: password
+        #     value: $(params.password)
+        workspaces:
+          - name: pipeline-workspace
+            persistentVolumeClaim:
+              claimName: pipelinerun-$(uid)-pvc
