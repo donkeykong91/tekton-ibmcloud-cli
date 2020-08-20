@@ -34,3 +34,16 @@ spec:
         name: binding-copy
       template:
         name: trigger-copy
+
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: github-push
+spec:
+  triggers:
+    - binding:
+        name: binding-github-push
+      template:
+        name: template-github-push
